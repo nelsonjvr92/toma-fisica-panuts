@@ -58,15 +58,14 @@
 </head>
 <body>
   <div class="container">
-    <img src="logo_panuts_v2.png" alt="Logo Panuts" width="180">
+    <img src="logo_panuts.png" alt="Logo Panuts" width="180">
     <h2>TOMA FÍSICA - PANUTS</h2>
 
     <input type="text" id="codigoInput" placeholder="Escanea código de barras" autofocus>
     
     <div id="resultado"></div>
 
-    <input type="text" id="observacionInput" placeholder="Describe el producto" style="display:none;">
-    <input type="number" id="cantidadInput" placeholder="Cantidad" min="0" value="" required>
+    <input type="number" id="cantidadInput" placeholder="Cantidad" min="0" required>
     
     <button id="registrarBtn">Registrar</button>
     <p id="mensaje"></p>
@@ -77,10 +76,8 @@ let productos = [];
 let productoActual = null;
 const urlGoogleScript = "https://script.google.com/macros/s/AKfycbxTI-ucIkdIdaJutIyHW4LgqK7C0l5GK6VlZt1rO2Z-2Rg-KX1s1v_dANAiLa8gmK2s/exec";
 
+// 1️⃣ Cargar CSV automáticamente
 const mensajeDiv = document.getElementById('mensaje');
-const obsInput = document.getElementById("observacionInput");
-
-// 1️⃣ Cargar CSV automáticamente con manejo de errores
 fetch("productos.csv")
   .then(res => {
     if (!res.ok) throw new Error("No se pudo encontrar el archivo productos.csv");
@@ -96,7 +93,6 @@ fetch("productos.csv")
       };
     });
     mensajeDiv.textContent = `✅ CSV cargado correctamente (${productos.length} productos)`;
-    console.log("Productos cargados:", productos.length);
   })
   .catch(error => {
     mensajeDiv.innerHTML = `<span style="color:red;">❌ Error: ${error.message}</span>`;
@@ -118,11 +114,11 @@ document.getElementById("codigoInput").addEventListener("input", e => {
         EAN: ${producto.codigoBarras}
       </div>`;
     
-    // Limpiar mensaje y enfocar cantidad inmediatamente
     document.getElementById("mensaje").textContent = "";
     const cantidadInput = document.getElementById("cantidadInput");
     cantidadInput.focus({ preventScroll: true });
-    cantidadInput.select(); // selecciona el contenido para que se sobrescriba fácilmente
+    cantidadInput.value = ""; // campo vacío por defecto
+    cantidadInput.select();
   } else {
     productoActual = null;
     contenedor.innerHTML = "";
@@ -135,38 +131,38 @@ document.getElementById("codigoInput").addEventListener("input", e => {
 // 3️⃣ Registrar producto en Google Sheets
 document.getElementById("registrarBtn").addEventListener("click", () => {
   const cantidad = parseFloat(document.getElementById("cantidadInput").value);
-
+  
+  // Si es producto no registrado, pedimos observación
   if (!productoActual) {
-    alert("Primero escanea un producto válido.");
-    return;
+    const descripcion = prompt("Producto no registrado. Ingresa descripción:");
+    if (!descripcion) {
+      alert("Se requiere descripción para registrar producto nuevo.");
+      return;
+    }
+    productoActual = {
+      codigo: document.getElementById("codigoInput").value.trim(),
+      descripcion: descripcion,
+      codigoBarras: document.getElementById("codigoInput").value.trim()
+    };
   }
+  
   if (isNaN(cantidad) || cantidad <= 0) {
     alert("Por favor ingresa una cantidad mayor a 0.");
     return;
   }
 
-  // Si es producto nuevo, tomar la descripción del input
-  if (!productoActual.descripcion) {
-    if (!obsInput.value.trim()) {
-      alert("Por favor ingresa la descripción del producto nuevo.");
-      return;
-    }
-    productoActual.descripcion = obsInput.value.trim();
-  }
-
   fetch(urlGoogleScript + `?codigo=${productoActual.codigo}&descripcion=${encodeURIComponent(productoActual.descripcion)}&codigoBarras=${productoActual.codigoBarras}&cantidad=${cantidad}`)
     .then(res => res.text())
-    .then(resp => {
-      mensajeDiv.textContent = resp;
+    .then(() => {
+      document.getElementById("mensaje").textContent = "✅ Registrado correctamente";
       document.getElementById("codigoInput").value = "";
-      document.getElementById("cantidadInput").value = 0;
-      obsInput.value = "";
-      obsInput.style.display = "none";
+      document.getElementById("cantidadInput").value = "";
       document.getElementById("resultado").innerHTML = "";
-      document.getElementById("codigoInput").focus();
+      document.getElementById("codigoInput").focus({ preventScroll: true });
+      productoActual = null;
     })
     .catch(() => {
-      mensajeDiv.textContent = "❌ Error al registrar";
+      document.getElementById("mensaje").textContent = "❌ Error al registrar";
     });
 });
 </script>
