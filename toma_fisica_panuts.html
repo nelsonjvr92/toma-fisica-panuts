@@ -66,7 +66,7 @@
     <div id="resultado"></div>
 
     <input type="text" id="observacionInput" placeholder="Describe el producto" style="display:none;">
-    <input type="number" id="cantidadInput" placeholder="Cantidad" min="0" value="" required>
+    <input type="text" id="cantidadInput" placeholder="Cantidad" min="0" value="" required>
     
     <button id="registrarBtn">Registrar</button>
     <p id="mensaje"></p>
@@ -161,9 +161,9 @@ document.getElementById("registrarBtn").addEventListener("click", () => {
     return;
   }
   if (isNaN(cantidad) || cantidad <= 0) {
-    alert("Por favor ingresa una cantidad mayor a 0.");
-    return;
-  }
+  alert("Por favor ingresa una cantidad mayor a 0.");
+  return;
+}
 
   // Si es producto nuevo, tomar la descripción del input
   if (!productoActual.descripcion) {
