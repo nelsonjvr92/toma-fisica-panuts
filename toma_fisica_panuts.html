@@ -104,39 +104,31 @@ fetch("productos.csv")
   });
 
 // 2️⃣ Buscar producto al escribir o escanear
-document.getElementById("codigoInput").addEventListener("change", e => {
+document.getElementById("codigoInput").addEventListener("input", e => {
   const valor = e.target.value.trim();
   const producto = productos.find(p => p.codigoBarras === valor || p.codigo === valor);
   const contenedor = document.getElementById("resultado");
-
+  
   if (producto) {
-    // Producto existente
-    productoActual = {
-      codigo: producto.codigo,      // SKU del CSV
-      descripcion: producto.descripcion,
-      codigoBarras: valor            // valor escaneado
-    };
+    productoActual = producto;
     contenedor.innerHTML = `
       <div class="desc">
         <strong>${producto.descripcion}</strong><br>
         Código: ${producto.codigo}<br>
-        EAN escaneado: ${valor}
+        EAN: ${producto.codigoBarras}
       </div>`;
-    obsInput.style.display = "none";
-    mensajeDiv.textContent = "";
-    document.getElementById("cantidadInput").focus();
+    
+    // Limpiar mensaje y enfocar cantidad inmediatamente
+    document.getElementById("mensaje").textContent = "";
+    const cantidadInput = document.getElementById("cantidadInput");
+    cantidadInput.focus({ preventScroll: true });
+    cantidadInput.select(); // selecciona el contenido para que se sobrescriba fácilmente
   } else {
-    // Producto nuevo
-    productoActual = {
-      codigo: valor,       // usar valor escaneado como SKU
-      descripcion: "",
-      codigoBarras: valor  // valor escaneado
-    };
+    productoActual = null;
     contenedor.innerHTML = "";
-    obsInput.style.display = "block";
-    obsInput.value = "";
-    obsInput.focus();
-    mensajeDiv.textContent = "❌ Producto no encontrado, ingresa descripción";
+    document.getElementById("mensaje").textContent = "❌ Producto no encontrado";
+    e.target.focus({ preventScroll: true });
+    e.target.select();
   }
 });
 
